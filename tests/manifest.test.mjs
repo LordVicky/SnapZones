@@ -15,6 +15,8 @@ test("manifest declares the extension and Phase 2 contribution points", () => {
     assert.equal(manifest.configDefaults.enabled, undefined);
     assert.equal(manifest.configSchema.enabled, undefined);
     assert.equal(manifest.configSchema.dragToZone, undefined);
+    assert.equal(manifest.configDefaults.zoneColor, undefined);
+    assert.equal(manifest.configSchema.zoneColor, undefined);
     assert.equal(manifest.configSchema.dragDropDelayMs, undefined);
     assert.equal(manifest.configSchema.cursorSampleIntervalMs.max, 1000);
 });

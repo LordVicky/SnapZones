@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { loadQmlJs } from "./helpers.mjs";
 
 const validation = await loadQmlJs("src/js/validation.js", [
-    "isSafeLayoutId", "isSafeAddress", "normalizeAddress", "isSafeMonitorName", "normalizeColor",
+    "isSafeLayoutId", "isSafeAddress", "normalizeAddress", "isSafeMonitorName",
     "validateLayout", "sanitizeLayout", "sanitizeConfig", "parseJsonObject", "isUnsupportedWindow",
 ]);
 
@@ -20,12 +20,12 @@ test("validates command and persistence identifiers", () => {
 test("sanitizes config values and rejects malformed layouts", () => {
     const config = validation.sanitizeConfig({
         layout: "quadrants", gap: 999, padding: -4,
-        overlayOpacity: 0.1, zoneColor: "red", showLabels: false,
+        overlayOpacity: 0.1, showLabels: false,
         monitorLayouts: { "DP-1": "thirds", "bad\nname": "halves", "HDMI-1": "../../x" },
     });
     assert.deepEqual(config, {
         layout: "quadrants", gap: 80, padding: 0,
-        overlayOpacity: 0.2, zoneColor: "#8ab4f8", showLabels: false,
+        overlayOpacity: 0.2, showLabels: false,
         floatOnPlacement: true,
         cursorSampleIntervalMs: 16,
         monitorLayouts: { "DP-1": "thirds" },

@@ -17,7 +17,7 @@ Rectangle {
     color: active ? Appearance.colors.colPrimary : Appearance.colors.colPrimaryContainer
     opacity: active ? 0.94 : manager?.config?.overlayOpacity || 0.86
     border.width: active ? 3 : 2
-    border.color: active ? Appearance.colors.colOnPrimary : manager?.config?.zoneColor || Appearance.colors.colPrimary
+    border.color: active ? Appearance.colors.colOnPrimary : Appearance.colors.colPrimary
     antialiasing: true
 
     Behavior on color {

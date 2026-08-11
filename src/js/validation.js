@@ -15,7 +15,6 @@ function normalizeRect(rect) {
 }
 
 const LAYOUT_ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
-const HEX_COLOR = /^#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?$/;
 const ADDRESS = /^(?:0[xX])?[0-9a-fA-F]+$/;
 
 function isSafeLayoutId(value) {
@@ -34,11 +33,6 @@ function normalizeAddress(value) {
 
 function isSafeMonitorName(value) {
     return typeof value === "string" && value.length > 0 && value.length <= 256 && !/[\u0000\n\r]/.test(value);
-}
-
-function normalizeColor(value, fallback = "#8ab4f8") {
-    const candidate = String(value || "");
-    return HEX_COLOR.test(candidate) ? candidate : fallback;
 }
 
 function validateLayout(layout) {
@@ -86,7 +80,6 @@ function sanitizeConfig(config = {}) {
         gap: Number.isFinite(rawGap) ? clamp(Math.round(rawGap), 0, 80) : 12,
         padding: Number.isFinite(rawPadding) ? clamp(Math.round(rawPadding), 0, 80) : 12,
         overlayOpacity: Number.isFinite(rawOpacity) ? clamp(rawOpacity, 0.2, 1) : 0.86,
-        zoneColor: normalizeColor(config.zoneColor),
         showLabels: config.showLabels !== false,
         floatOnPlacement: config.floatOnPlacement !== false,
         cursorSampleIntervalMs: Number.isFinite(rawCursorSampleInterval) ? clamp(Math.round(rawCursorSampleInterval), 8, 1000) : 16,
