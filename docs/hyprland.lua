@@ -25,7 +25,7 @@ hl.bind("SUPER + mouse:272", hl.dsp.global("quickshell:vynxZonesDragEnd"), {
 -- Releasing either Super key cancels an unfinished drag. After a normal mouse
 -- drop the controller is already idle, so this is harmless and keeps the
 -- modifier-release path deterministic.
-hl.bind("SUPER_L", hl.dsp.global("quickshell:vynxZonesDragCancel"), {
+hl.bind("SUPER_L", hl.dsp.global("quickshell:vynxZonesDragModifierRelease"), {
     ignore_mods = true,
     transparent = true,
     release = true,
@@ -33,7 +33,7 @@ hl.bind("SUPER_L", hl.dsp.global("quickshell:vynxZonesDragCancel"), {
     description = "Shell: Cancel Vynx Zones drag on Super release",
 })
 
-hl.bind("SUPER_R", hl.dsp.global("quickshell:vynxZonesDragCancel"), {
+hl.bind("SUPER_R", hl.dsp.global("quickshell:vynxZonesDragModifierRelease"), {
     ignore_mods = true,
     transparent = true,
     release = true,

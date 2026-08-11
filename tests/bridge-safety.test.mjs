@@ -150,9 +150,9 @@ test("native drag path is input-transparent and exposes press/release IPC", () =
     assert.match(cursorSampler, /cursor sampler failed to start or stopped while requested/);
     assert.match(cursorSampler, /cursor sampler exited/);
     assert.doesNotMatch(cursorSampler, /process\.running\s*=\s*true/);
-    assert.match(manager, /name: "vynxZonesDragEnd"[\s\S]*?onReleased: dragController\.end\(\)/);
+    assert.match(manager, /name: "vynxZonesDragEnd"[\s\S]*?onPressed: dragController\.end\(\)/);
     assert.match(manager, /name: "vynxZonesDragCancel"[\s\S]*?onPressed: root\.cancelDrag\("escape"\)/);
-    assert.match(manager, /name: "vynxZonesDragCancel"[\s\S]*?onReleased: root\.cancelDrag\("modifier-released"\)/);
+    assert.match(manager, /name: "vynxZonesDragModifierRelease"[\s\S]*?onPressed: root\.cancelDrag\("modifier-released"\)/);
 });
 
 test("Lua integration preserves native movement and has coherent drop/cancel releases", () => {
@@ -162,6 +162,7 @@ test("Lua integration preserves native movement and has coherent drop/cancel rel
     assert.match(luaIntegration, /SUPER_L/);
     assert.match(luaIntegration, /SUPER_R/);
     assert.match(luaIntegration, /vynxZonesDragCancel/);
+    assert.match(luaIntegration, /vynxZonesDragModifierRelease/);
     assert.match(luaIntegration, /release\s*=\s*true/);
     assert.match(luaIntegration, /non_consuming\s*=\s*true/);
     assert.match(luaIntegration, /hl\.bind\("Escape"[\s\S]*?ignore_mods\s*=\s*true/);

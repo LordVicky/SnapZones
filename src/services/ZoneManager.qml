@@ -783,13 +783,21 @@ Scope {
                 GlobalShortcut {
                     name: "vynxZonesDragEnd"
                     description: "Drop native Super-drag into the hovered zone"
-                    onReleased: dragController.end()
+                    // Hyprland invokes this shortcut from a release-only bind,
+                    // which arrives as one shortcut activation (pressed).
+                    onPressed: dragController.end()
                 }
                 GlobalShortcut {
                     name: "vynxZonesDragCancel"
-                    description: "Cancel native Super-drag zone preview (Escape or Super release)"
+                    description: "Cancel native Super-drag zone preview with Escape"
                     onPressed: root.cancelDrag("escape")
-                    onReleased: root.cancelDrag("modifier-released")
+                }
+                GlobalShortcut {
+                    name: "vynxZonesDragModifierRelease"
+                    description: "Cancel native Super-drag when Super is released before mouse-up"
+                    // This is invoked by a release-only Hyprland bind, so the
+                    // compositor delivers one shortcut activation (pressed).
+                    onPressed: root.cancelDrag("modifier-released")
                 }
             }
         }
