@@ -16,7 +16,6 @@
     "showLabels": true,
     "floatOnPlacement": true,
     "dragToZone": true,
-    "dragDropDelayMs": 70,
     "cursorSampleIntervalMs": 16
   },
   "configSchema": {
@@ -87,14 +86,6 @@
       "label": "Enable Super-drag snapping",
       "icon": "pan_tool_alt",
       "default": true
-    },
-    "dragDropDelayMs": {
-      "type": "int",
-      "label": "Drag drop settling delay",
-      "icon": "timer",
-      "default": 70,
-      "min": 20,
-      "max": 250
     },
     "cursorSampleIntervalMs": {
       "type": "int",

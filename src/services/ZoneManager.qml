@@ -113,7 +113,7 @@ Scope {
         target: GlobalStates
         function onSuperDownChanged() {
             if (!GlobalStates.superDown && dragController.active)
-                dragController.end();
+                dragController.cancel("modifier-released");
         }
     }
 
@@ -790,9 +790,9 @@ Scope {
                     onPressed: dragController.start()
                 }
                 GlobalShortcut {
-                    name: "snapZonesShiftCommit"
-                    description: "Commit SnapZones when Shift is released"
-                    onReleased: dragController.end()
+                    name: "snapZonesShiftCancel"
+                    description: "Close SnapZones when Shift is released"
+                    onReleased: dragController.cancel("modifier-released")
                 }
                 GlobalShortcut {
                     name: "snapZonesDragCancel"

@@ -15,11 +15,6 @@ QtObject {
     property var dragState: DragState.createDragState()
     property point cursor: Qt.point(0, 0)
     property bool cursorAvailable: false
-    property int cursorRevision: 0
-    property var pendingDrop: null
-    property bool settling: false
-    property bool committed: false
-    readonly property int maxSettleMs: 1500
     readonly property int activeWatchdogMs: 5000
     readonly property int hardLifetimeMs: 30000
 
@@ -32,16 +27,13 @@ QtObject {
     }
 
     function start() {
-        if (!root.enabled || root.active || root.settling || root.committed || !root.manager || !root.manager.ready)
+        if (!root.enabled || root.active || !root.manager || !root.manager.ready)
             return false;
         if (!root.manager.beginDragCapture())
             return false;
         const target = root.manager.pendingWindow;
         root.cursorAvailable = false;
         root.cursor = Qt.point(0, 0);
-        root.cursorRevision = 0;
-        dropTimer.stop();
-        watchdogTimer.stop();
         activityWatchdogTimer.stop();
         hardLifetimeTimer.stop();
         const result = DragState.reduceDrag(root.dragState, {
@@ -56,9 +48,6 @@ QtObject {
             return false;
         }
         root.dragState = result.state;
-        root.pendingDrop = null;
-        root.settling = false;
-        root.committed = false;
         root.manager.dragActive = true;
         root.manager.setHoveredZone(-1);
         activityWatchdogTimer.start();
@@ -106,7 +95,6 @@ QtObject {
         root.cursor = Qt.point(Math.round(point.x), Math.round(point.y));
         root.manager.dragCursor = root.cursor;
         root.cursorAvailable = true;
-        root.cursorRevision += 1;
         const hover = root.monitorAndZone(point);
         const result = DragState.reduceDrag(root.dragState, {
             type: "move",
@@ -122,65 +110,29 @@ QtObject {
         return true;
     }
 
-    function boundedDropDelay() {
-        const configured = Number(root.manager?.config?.dragDropDelayMs);
-        if (!Number.isFinite(configured))
-            return 70;
-        return Math.max(0, Math.min(Math.round(configured), root.maxSettleMs - 1));
-    }
-
     function end() {
-        if (!root.active || root.settling || root.committed)
+        if (!root.active)
             return false;
-        root.committed = true;
-        root.settling = true;
-        root.pendingDrop = {
-            token: root.dragState.token,
-            cursorRevision: root.cursorRevision,
-            startedAt: root.now()
-        };
-        root.finishDrop();
-        return true;
-    }
-
-    function finishDrop() {
-        if (!root.active || !root.pendingDrop)
-            return;
-        const pending = root.pendingDrop;
-        if (!Number.isSafeInteger(Number(pending.token)) || Number(pending.token) !== Number(root.dragState.token)) {
-            root.cancel("stale-release", true);
-            return;
-        }
-        const elapsed = Math.max(0, root.now() - Number(pending.startedAt));
-        if (elapsed >= root.maxSettleMs) {
-            root.cancel("cursor-timeout", true);
-            return;
-        }
         const point = root.cursorAvailable ? root.cursor : root.dragState.point;
         if (!point) {
-            root.cancel("cursor-timeout", true);
-            return;
+            root.cancel("cursor-timeout");
+            return false;
         }
-        root.pendingDrop = null;
         const hover = root.monitorAndZone(point);
         const result = DragState.reduceDrag(root.dragState, {
             type: "end",
-            token: pending.token,
+            token: root.dragState.token,
             point: point,
             zone: hover.zone,
             now: root.now()
         });
         if (result.effect.type === "ignored") {
-            root.cancel("stale-release", true);
-            return;
+            root.cancel("stale-release");
+            return false;
         }
-        dropTimer.stop();
-        watchdogTimer.stop();
         activityWatchdogTimer.stop();
         hardLifetimeTimer.stop();
         root.dragState = result.state;
-        root.settling = false;
-        root.committed = false;
         root.manager.setHoveredZone(-1);
         if (result.effect.type === "drop") {
             const accepted = root.manager.placeZone(result.effect.zone, true);
@@ -194,36 +146,23 @@ QtObject {
             root.manager.cancelDragCapture();
             root.cancelled(result.effect.reason || "no-zone");
         }
+        return result.effect.type === "drop";
     }
 
-    function cancel(reason = "cancelled", force = false) {
+    function cancel(reason = "cancelled") {
         if (!root.active) {
-            dropTimer.stop();
-            watchdogTimer.stop();
             activityWatchdogTimer.stop();
             hardLifetimeTimer.stop();
-            root.pendingDrop = null;
-            root.settling = false;
-            root.committed = false;
             return false;
         }
-        // Mouse-up has committed the drop. Ignore only the later Super
-        // release; Escape/IPC remain explicit emergency cancellation paths.
-        if ((root.settling || root.committed) && String(reason) === "modifier-released" && !force)
-            return false;
-        dropTimer.stop();
-        watchdogTimer.stop();
         activityWatchdogTimer.stop();
         hardLifetimeTimer.stop();
-        root.pendingDrop = null;
         const result = DragState.reduceDrag(root.dragState, {
             type: "cancel",
             token: root.dragState.token,
             reason: String(reason)
         });
         root.dragState = result.state;
-        root.settling = false;
-        root.committed = false;
         root.manager.dragActive = false;
         root.manager.setHoveredZone(-1);
         root.manager.cancelDragCapture();
@@ -239,30 +178,13 @@ QtObject {
         onCursorSample: (x, y, _timestamp, sampleToken) => root.acceptCursor(x, y, sampleToken)
     }
 
-    property Timer dropTimer: Timer {
-        id: dropTimer
-        interval: 70
-        repeat: false
-        onTriggered: root.finishDrop()
-    }
-
-    property Timer watchdogTimer: Timer {
-        id: watchdogTimer
-        interval: root.maxSettleMs
-        repeat: false
-        onTriggered: {
-            if (root.active && root.pendingDrop)
-                root.cancel("cursor-timeout", true);
-        }
-    }
-
     property Timer activityWatchdogTimer: Timer {
         id: activityWatchdogTimer
         interval: root.activeWatchdogMs
         repeat: false
         onTriggered: {
             if (root.active)
-                root.cancel("cursor-timeout", true);
+                root.cancel("cursor-timeout");
         }
     }
 
@@ -272,12 +194,12 @@ QtObject {
         repeat: false
         onTriggered: {
             if (root.active)
-                root.cancel("lifetime-timeout", true);
+                root.cancel("lifetime-timeout");
         }
     }
 
     onEnabledChanged: {
         if (!root.enabled && root.active)
-            root.cancel("disabled", true);
+            root.cancel("disabled");
     }
 }

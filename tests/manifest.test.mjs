@@ -13,6 +13,6 @@ test("manifest declares the extension and Phase 2 contribution points", () => {
     assert.deepEqual(manifest.configSchema.layout.options.map(option => option.value), ["halves", "thirds", "main-side", "quadrants", "ultrawide", "fullscreen"]);
     assert.equal(manifest.configDefaults.dragToZone, true);
     assert.equal(manifest.configSchema.dragToZone.type, "bool");
-    assert.equal(manifest.configSchema.dragDropDelayMs.min, 20);
+    assert.equal(manifest.configSchema.dragDropDelayMs, undefined);
     assert.equal(manifest.configSchema.cursorSampleIntervalMs.max, 1000);
 });

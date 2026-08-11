@@ -91,7 +91,7 @@ Item {
                     {
                         key: "Super+Shift + left drag",
                         value: "Native snap",
-                        detail: "Release either modifier to place; press Esc to cancel"
+                        detail: "Release left mouse to place; release a modifier or press Esc to cancel"
                     },
                     {
                         key: "IPC",
