@@ -55,17 +55,11 @@ QtObject {
             return;
         }
         if (parsed?.type === "status") {
-            const statusToken = Number(parsed?.token);
-            if (!Number.isSafeInteger(statusToken) || statusToken < 0 || statusToken !== root.token)
-                return;
             root.lastError = String(parsed?.error || "");
             root.available = parsed?.available === true;
             return;
         }
         if (parsed?.type !== "cursor")
-            return;
-        const token = Number(parsed?.token);
-        if (!Number.isSafeInteger(token) || token < 0 || token !== root.token)
             return;
         const x = Number(parsed?.x);
         const y = Number(parsed?.y);
@@ -75,7 +69,9 @@ QtObject {
         root.available = true;
         root.lastError = "";
         root.sampleSeen = true;
-        root.cursorSample(root.cursor.x, root.cursor.y, Number(parsed?.time) || 0, token);
+        // ponytail: one helper exists only for the active drag; use the live
+        // controller token instead of racing the Process command binding.
+        root.cursorSample(root.cursor.x, root.cursor.y, Number(parsed?.time) || 0, root.token);
     }
 
     property Process samplerProcess: Process {

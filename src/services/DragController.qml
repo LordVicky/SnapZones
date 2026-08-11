@@ -132,9 +132,6 @@ QtObject {
     function end() {
         if (!root.active || root.settling || root.committed)
             return false;
-        // Release arrives in the same compositor turn as the native drag. A
-        // short, bounded delay lets the final cursor sample and window state
-        // settle before the exact placement command is queued.
         root.committed = true;
         root.settling = true;
         root.pendingDrop = {
@@ -142,10 +139,7 @@ QtObject {
             cursorRevision: root.cursorRevision,
             startedAt: root.now()
         };
-        dropTimer.interval = root.boundedDropDelay();
-        dropTimer.start();
-        watchdogTimer.interval = root.maxSettleMs;
-        watchdogTimer.start();
+        root.finishDrop();
         return true;
     }
 
@@ -159,17 +153,6 @@ QtObject {
         }
         const elapsed = Math.max(0, root.now() - Number(pending.startedAt));
         if (elapsed >= root.maxSettleMs) {
-            root.cancel("cursor-timeout", true);
-            return;
-        }
-        // Never place using the point captured at mouse-release time. Wait for
-        // a sample emitted after release so a compositor/client move in the
-        // same frame cannot snap to the previous cursor position.
-        if (root.cursorRevision <= Number(pending.cursorRevision)) {
-            if (watchdogTimer.running && elapsed < root.maxSettleMs) {
-                dropTimer.start();
-                return;
-            }
             root.cancel("cursor-timeout", true);
             return;
         }

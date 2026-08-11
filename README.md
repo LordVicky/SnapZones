@@ -10,7 +10,7 @@ FancyZones-style window placement for [ii-vynx](https://github.com/lll2yu/illogi
 - Per-monitor layout assignments, gap and work-area padding controls.
 - Correct handling of monitor origins, scale-independent normalized layout data, reserved edges, and hot-plug fallback.
 - Optional float-on-placement for tiled windows.
-- Native `Super + left-drag` preview and release-to-snap, with monitor crossing support.
+- Native `Super+Shift + left-drag` preview and modifier-release snapping, with monitor crossing support.
 - An input-transparent drag overlay so Hyprland keeps ownership of the real pointer gesture.
 - A bounded, unprivileged Python stdlib cursor sampler using Hyprland's user IPC socket (no raw input, elevated privileges, daemon, or plugin).
 - A cheatsheet page plus manifest-driven settings for the layout and placement options.
@@ -36,7 +36,7 @@ The exact global syntax may differ between Hyprland versions. The names exposed 
 
 ### Enable native Super-drag
 
-Phase 2 keeps Hyprland's native move dispatcher in charge of the pointer. Add the bindings in [`docs/hyprland.lua`](docs/hyprland.lua) beside your existing Lua keybinds. If you already have a `SUPER + mouse:272` move bind, keep exactly one native `hl.dsp.window.drag()` bind and add the non-consuming Vynx Zones press/release binds plus the `SUPER_L`/`SUPER_R` release-cancel binds. Reload Hyprland after saving the file.
+Phase 2 keeps Hyprland's native move dispatcher in charge of the pointer. Add the bindings in [`docs/hyprland.lua`](docs/hyprland.lua) beside your existing Lua keybinds. The dedicated gesture is `Super+Shift + left-drag`; releasing either modifier commits the highlighted zone. Normal `Super + left-drag` stays unchanged.
 
 The extension deliberately does not install these binds or edit your live configuration. Without the press/release integration, the Phase 1 picker and IPC commands still work, but holding Super while dragging will not open the preview.
 
@@ -66,12 +66,12 @@ With the picker open:
 
 With the Lua integration enabled:
 
-- Hold `Super` and left-drag a window using the normal Hyprland move gesture.
+- Hold `Super+Shift` and left-drag a window.
 - Move over a highlighted zone; the overlay follows the monitor under the cursor.
-- Release the left mouse button to place the window.
-- Release `Super` before the mouse button to cancel without placing; `Esc` also cancels.
+- Release either `Super` or `Shift` to place the window in the highlighted zone.
+- Press `Esc` to cancel explicitly.
 
-The drag surface is intentionally click-through and does not take keyboard focus. The `Esc` and Super-release paths therefore come from the Hyprland bindings, while the local overlay Escape handler remains a safe fallback if a key event is delivered to it.
+The drag surface is intentionally click-through and does not take keyboard focus. Escape comes from the Hyprland binding; Super release uses ii-vynx's existing global modifier state.
 
 The active layout and geometry settings are available through ii-vynx's extension configuration. Per-monitor assignments are stored by the service for the focused monitor; layouts are stored as normalized rectangles and therefore survive resolution changes.
 
@@ -96,7 +96,7 @@ The service target is `vynxZones`:
 
 ## Scope and limitations
 
-Native drag preview is opt-in through the Hyprland Lua snippet because an ii-vynx extension cannot intercept compositor pointer bindings by itself. It acts on the focused Hyprland window captured at press time and sends pixel move/resize dispatches after mouse release. Releasing Super cancels the preview and never issues a placement. Fullscreen, pinned, hidden, unmapped, and special-workspace windows are ignored. Tiled windows are floated before placement when **Float tiled windows** is enabled.
+Native drag preview is opt-in through the Hyprland Lua snippet because an ii-vynx extension cannot intercept compositor pointer bindings by itself. It acts on the focused Hyprland window captured at press time and sends pixel move/resize dispatches when Super is released. Escape cancels explicitly. Fullscreen, pinned, hidden, unmapped, and special-workspace windows are ignored. Tiled windows are floated before placement when **Float tiled windows** is enabled.
 
 The cursor helper polls `j/cursorpos` on Hyprland's per-user command socket only while a drag is active. It validates the socket environment, command, response size, coordinate range, and sampling interval. It never reads raw input devices and never invokes a shell. If the socket is unavailable, the overlay remains harmless and release cancels without issuing a placement.
 

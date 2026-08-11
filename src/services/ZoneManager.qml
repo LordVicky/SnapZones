@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import qs
 import qs.services
 import "../js/geometry.js" as Geometry
 import "../js/layouts.js" as Layouts
@@ -105,6 +106,14 @@ Scope {
         target: HyprlandData
         function onMonitorsChanged() {
             root.monitorTopologyChanged();
+        }
+    }
+
+    Connections {
+        target: GlobalStates
+        function onSuperDownChanged() {
+            if (!GlobalStates.superDown && dragController.active)
+                dragController.end();
         }
     }
 
@@ -781,23 +790,14 @@ Scope {
                     onPressed: dragController.start()
                 }
                 GlobalShortcut {
-                    name: "vynxZonesDragEnd"
-                    description: "Drop native Super-drag into the hovered zone"
-                    // Hyprland invokes this shortcut from a release-only bind,
-                    // which arrives as one shortcut activation (pressed).
-                    onPressed: dragController.end()
+                    name: "vynxZonesShiftCommit"
+                    description: "Commit Vynx Zones when Shift is released"
+                    onReleased: dragController.end()
                 }
                 GlobalShortcut {
                     name: "vynxZonesDragCancel"
                     description: "Cancel native Super-drag zone preview with Escape"
                     onPressed: root.cancelDrag("escape")
-                }
-                GlobalShortcut {
-                    name: "vynxZonesDragModifierRelease"
-                    description: "Cancel native Super-drag when Super is released before mouse-up"
-                    // This is invoked by a release-only Hyprland bind, so the
-                    // compositor delivers one shortcut activation (pressed).
-                    onPressed: root.cancelDrag("modifier-released")
                 }
             }
         }

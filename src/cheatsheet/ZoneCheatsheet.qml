@@ -89,9 +89,9 @@ Item {
                         detail: "Close the picker"
                     },
                     {
-                        key: "Super + left drag",
+                        key: "Super+Shift + left drag",
                         value: "Native snap",
-                        detail: "Release the mouse to place; release Super or press Esc to cancel (Lua integration required)"
+                        detail: "Release either modifier to place; press Esc to cancel"
                     },
                     {
                         key: "IPC",

@@ -117,7 +117,8 @@ test("native drag path is input-transparent and exposes press/release IPC", () =
     assert.match(dragController, /cursorRevision: root\.cursorRevision/);
     assert.match(dragController, /startedAt: root\.now\(\)/);
     assert.match(dragController, /elapsed >= root\.maxSettleMs/);
-    assert.match(dragController, /cursorRevision <= Number\(pending\.cursorRevision\)/);
+    assert.doesNotMatch(dragController, /cursorRevision <= Number\(pending\.cursorRevision\)/);
+    assert.match(dragController, /root\.pendingDrop = \{[\s\S]*?root\.finishDrop\(\);/);
     assert.match(dragController, /const point = root\.cursorAvailable \? root\.cursor : root\.dragState\.point/);
     assert.match(dragController, /onCursorSample: .*sampleToken/);
     assert.match(dragController, /watchdogTimer/);
@@ -150,23 +151,26 @@ test("native drag path is input-transparent and exposes press/release IPC", () =
     assert.match(cursorSampler, /cursor sampler failed to start or stopped while requested/);
     assert.match(cursorSampler, /cursor sampler exited/);
     assert.doesNotMatch(cursorSampler, /process\.running\s*=\s*true/);
-    assert.match(manager, /name: "vynxZonesDragEnd"[\s\S]*?onPressed: dragController\.end\(\)/);
+    assert.match(manager, /target: GlobalStates[\s\S]*?onSuperDownChanged\(\)[\s\S]*?!GlobalStates\.superDown && dragController\.active[\s\S]*?dragController\.end\(\)/);
+    assert.match(manager, /name: "vynxZonesShiftCommit"[\s\S]*?onReleased:[\s\S]*?dragController\.end\(\)/);
     assert.match(manager, /name: "vynxZonesDragCancel"[\s\S]*?onPressed: root\.cancelDrag\("escape"\)/);
-    assert.match(manager, /name: "vynxZonesDragModifierRelease"[\s\S]*?onPressed: root\.cancelDrag\("modifier-released"\)/);
+    assert.doesNotMatch(manager, /vynxZonesDragModifierRelease/);
 });
 
 test("Lua integration preserves native movement and has coherent drop/cancel releases", () => {
     assert.match(luaIntegration, /hl\.dsp\.window\.drag\(\)/);
     assert.match(luaIntegration, /quickshell:vynxZonesDragStart/);
-    assert.match(luaIntegration, /quickshell:vynxZonesDragEnd/);
-    assert.match(luaIntegration, /SUPER_L/);
-    assert.match(luaIntegration, /SUPER_R/);
     assert.match(luaIntegration, /vynxZonesDragCancel/);
-    assert.match(luaIntegration, /vynxZonesDragModifierRelease/);
-    assert.match(luaIntegration, /release\s*=\s*true/);
+    assert.doesNotMatch(luaIntegration, /vynxZonesDragModifierRelease/);
+    assert.match(luaIntegration, /SUPER \+ SHIFT \+ mouse:272/);
+    assert.match(luaIntegration, /SUPER \+ SHIFT_L/);
+    assert.match(luaIntegration, /SUPER \+ SHIFT_R/);
+    assert.match(luaIntegration, /quickshell:vynxZonesShiftCommit/);
+    assert.doesNotMatch(luaIntegration, /release\s*=\s*true/);
+    assert.doesNotMatch(luaIntegration, /hl\.timer\(|hl\.is_key_down/);
     assert.match(luaIntegration, /non_consuming\s*=\s*true/);
     assert.match(luaIntegration, /hl\.bind\("Escape"[\s\S]*?ignore_mods\s*=\s*true/);
-    assert.match(luaIntegration, /Releasing either Super key cancels/);
+    assert.match(luaIntegration, /Releasing Super commits; Escape cancels/);
 });
 
 test("cursor sampler stays unprivileged and shell-free", () => {
