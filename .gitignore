@@ -1,0 +1,5 @@
+node_modules/
+*.qmlc
+*.jsc
+.cache/
+.DS_Store
