@@ -89,7 +89,6 @@ function sanitizeConfig(config = {}) {
         zoneColor: normalizeColor(config.zoneColor),
         showLabels: config.showLabels !== false,
         floatOnPlacement: config.floatOnPlacement !== false,
-        dragToZone: config.dragToZone !== false,
         cursorSampleIntervalMs: Number.isFinite(rawCursorSampleInterval) ? clamp(Math.round(rawCursorSampleInterval), 8, 1000) : 16,
         monitorLayouts: monitorLayouts,
     };

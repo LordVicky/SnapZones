@@ -14,7 +14,6 @@
     "zoneColor": "#8ab4f8",
     "showLabels": true,
     "floatOnPlacement": true,
-    "dragToZone": true,
     "cursorSampleIntervalMs": 16
   },
   "configSchema": {
@@ -72,12 +71,6 @@
       "type": "bool",
       "label": "Float Tiled Windows",
       "icon": "open_in_full",
-      "default": true
-    },
-    "dragToZone": {
-      "type": "bool",
-      "label": "Enable Super-drag snapping",
-      "icon": "pan_tool_alt",
       "default": true
     },
     "cursorSampleIntervalMs": {

@@ -57,7 +57,7 @@ Scope {
     DragController {
         id: dragController
         manager: root
-        enabled: root.ready && root.config.dragToZone
+        enabled: root.ready
         onCancelled: reason => {
             if (reason !== "no-zone")
                 root.errorMessage = "Drag cancelled: " + reason;
