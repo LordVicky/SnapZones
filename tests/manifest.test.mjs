@@ -5,7 +5,7 @@ import fs from "node:fs/promises";
 const manifest = JSON.parse(await fs.readFile(new URL("../extension.json", import.meta.url), "utf8"));
 
 test("manifest declares the extension and Phase 2 contribution points", () => {
-    assert.equal(manifest.extensionId, "vynx-zones");
+    assert.equal(manifest.extensionId, "snapzones");
     assert.equal(manifest.version, "0.2.0");
     assert.equal(manifest.contributes.services[0].id, "zoneManager");
     assert.equal(manifest.contributes.cheatsheet[0].component, "src/cheatsheet/ZoneCheatsheet.qml");

@@ -1,6 +1,6 @@
 {
-  "extensionId": "vynx-zones",
-  "name": "Vynx Zones",
+  "extensionId": "snapzones",
+  "name": "SnapZones",
   "description": "FancyZones-style window placement and native Super-drag snapping for ii-vynx and Hyprland.",
   "version": "0.2.0",
   "author": "ii-vynx community",
@@ -22,7 +22,7 @@
   "configSchema": {
     "enabled": {
       "type": "bool",
-      "label": "Enable Vynx Zones",
+      "label": "Enable SnapZones",
       "icon": "select_window",
       "default": true
     },

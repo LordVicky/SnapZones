@@ -18,7 +18,7 @@ PanelWindow {
     color: "transparent"
     exclusiveZone: 0
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.namespace: "quickshell:vynx-zones"
+    WlrLayershell.namespace: "quickshell:snapzones"
     WlrLayershell.keyboardFocus: root.inputTransparent ? WlrKeyboardFocus.None : WlrKeyboardFocus.Exclusive
 
     anchors {
@@ -146,7 +146,7 @@ PanelWindow {
             ColumnLayout {
                 spacing: 1
                 StyledText {
-                    text: qsTr("Vynx Zones")
+                    text: qsTr("SnapZones")
                     color: Appearance.colors.colOnSurface
                     font.bold: true
                     font.pixelSize: Appearance.font.pixelSize.large

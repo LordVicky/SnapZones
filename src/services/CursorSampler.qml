@@ -19,7 +19,7 @@ QtObject {
     readonly property int maxRestartAttempts: 3
     readonly property int restartDelayMs: 500
     readonly property string scriptPath: decodeURIComponent(String(Qt.resolvedUrl("../helpers/cursor_sampler.py")).replace(/^file:\/\//, ""))
-    readonly property string pythonExecutable: Quickshell.env("VYNX_ZONES_PYTHON") || "python3"
+    readonly property string pythonExecutable: Quickshell.env("SNAPZONES_PYTHON") || "python3"
     property point cursor: Qt.point(0, 0)
     property bool available: false
     property string lastError: ""

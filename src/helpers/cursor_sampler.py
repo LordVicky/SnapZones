@@ -217,7 +217,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     except KeyboardInterrupt:
         return 0
     except (OSError, RuntimeError, ValueError) as error:
-        print(f"vynx-zones cursor sampler: {error}", file=sys.stderr)
+        print(f"snapzones cursor sampler: {error}", file=sys.stderr)
         return 1
     return 0
 

@@ -152,20 +152,20 @@ test("native drag path is input-transparent and exposes press/release IPC", () =
     assert.match(cursorSampler, /cursor sampler exited/);
     assert.doesNotMatch(cursorSampler, /process\.running\s*=\s*true/);
     assert.match(manager, /target: GlobalStates[\s\S]*?onSuperDownChanged\(\)[\s\S]*?!GlobalStates\.superDown && dragController\.active[\s\S]*?dragController\.end\(\)/);
-    assert.match(manager, /name: "vynxZonesShiftCommit"[\s\S]*?onReleased:[\s\S]*?dragController\.end\(\)/);
-    assert.match(manager, /name: "vynxZonesDragCancel"[\s\S]*?onPressed: root\.cancelDrag\("escape"\)/);
-    assert.doesNotMatch(manager, /vynxZonesDragModifierRelease/);
+    assert.match(manager, /name: "snapZonesShiftCommit"[\s\S]*?onReleased:[\s\S]*?dragController\.end\(\)/);
+    assert.match(manager, /name: "snapZonesDragCancel"[\s\S]*?onPressed: root\.cancelDrag\("escape"\)/);
+    assert.doesNotMatch(manager, /snapZonesDragModifierRelease/);
 });
 
 test("Lua integration preserves native movement and has coherent drop/cancel releases", () => {
     assert.match(luaIntegration, /hl\.dsp\.window\.drag\(\)/);
-    assert.match(luaIntegration, /quickshell:vynxZonesDragStart/);
-    assert.match(luaIntegration, /vynxZonesDragCancel/);
-    assert.doesNotMatch(luaIntegration, /vynxZonesDragModifierRelease/);
+    assert.match(luaIntegration, /quickshell:snapZonesDragStart/);
+    assert.match(luaIntegration, /snapZonesDragCancel/);
+    assert.doesNotMatch(luaIntegration, /snapZonesDragModifierRelease/);
     assert.match(luaIntegration, /SUPER \+ SHIFT \+ mouse:272/);
     assert.match(luaIntegration, /SUPER \+ SHIFT_L/);
     assert.match(luaIntegration, /SUPER \+ SHIFT_R/);
-    assert.match(luaIntegration, /quickshell:vynxZonesShiftCommit/);
+    assert.match(luaIntegration, /quickshell:snapZonesShiftCommit/);
     assert.doesNotMatch(luaIntegration, /release\s*=\s*true/);
     assert.doesNotMatch(luaIntegration, /hl\.timer\(|hl\.is_key_down/);
     assert.match(luaIntegration, /non_consuming\s*=\s*true/);

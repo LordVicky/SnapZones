@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ii_root="${VYNX_ZONES_II_ROOT:-${HOME}/.config/quickshell/ii}"
+ii_root="${SNAPZONES_II_ROOT:-${HOME}/.config/quickshell/ii}"
 qml_imports=("-I" "${ii_root}" "-I" "/usr/lib64/qt6/qml")
 
 if ! command -v node >/dev/null 2>&1; then
@@ -92,7 +92,7 @@ else
 fi
 
 if command -v qmlformat-qt6 >/dev/null 2>&1; then
-    if [[ "${VYNX_ZONES_FORMAT_CHECK:-0}" == "1" ]]; then
+    if [[ "${SNAPZONES_FORMAT_CHECK:-0}" == "1" ]]; then
         # qmlformat-qt6 has no --check on the target environment. Format into
         # a temporary file and compare, preserving the working tree.
         for qml_file in "${qml_files[@]}"; do
@@ -108,7 +108,7 @@ if command -v qmlformat-qt6 >/dev/null 2>&1; then
         for qml_file in "${qml_files[@]}"; do
             qmlformat-qt6 "${qml_file}" > /dev/null
         done
-        echo "validate: QML formatter parses files (set VYNX_ZONES_FORMAT_CHECK=1 for a strict comparison)"
+        echo "validate: QML formatter parses files (set SNAPZONES_FORMAT_CHECK=1 for a strict comparison)"
     fi
 else
     echo "validate: qmlformat-qt6 not installed; skipped QML formatting" >&2

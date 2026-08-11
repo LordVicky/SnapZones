@@ -21,7 +21,7 @@ import "."
 Scope {
     id: root
 
-    property string extensionId: "vynx-zones"
+    property string extensionId: "snapzones"
     property int _processKind: 0
     readonly property bool isMainShell: _processKind === 1
 
@@ -708,7 +708,7 @@ Scope {
         sourceComponent: Component {
             Item {
                 IpcHandler {
-                    target: "vynxZones"
+                    target: "snapZones"
 
                     function toggle() {
                         root.togglePicker();
@@ -730,7 +730,7 @@ Scope {
                     }
                     function place(index: int) {
                         if (index > 0 && !root.placeZone(index - 1))
-                            console.warn("Vynx Zones: placement rejected:", root.errorMessage);
+                            console.warn("SnapZones: placement rejected:", root.errorMessage);
                     }
                     function nextLayout() {
                         root.cycleLayout(1);
@@ -750,52 +750,52 @@ Scope {
                 }
 
                 GlobalShortcut {
-                    name: "vynxZonesToggle"
-                    description: "Toggle the Vynx Zones picker"
+                    name: "snapZonesToggle"
+                    description: "Toggle the SnapZones picker"
                     onPressed: root.togglePicker()
                 }
                 GlobalShortcut {
-                    name: "vynxZonesOpen"
-                    description: "Open the Vynx Zones picker"
+                    name: "snapZonesOpen"
+                    description: "Open the SnapZones picker"
                     onPressed: root.beginPicker()
                 }
                 GlobalShortcut {
-                    name: "vynxZonesNextLayout"
-                    description: "Switch to the next Vynx Zones layout"
+                    name: "snapZonesNextLayout"
+                    description: "Switch to the next SnapZones layout"
                     onPressed: root.cycleLayout(1)
                 }
                 GlobalShortcut {
-                    name: "vynxZonesPreviousLayout"
-                    description: "Switch to the previous Vynx Zones layout"
+                    name: "snapZonesPreviousLayout"
+                    description: "Switch to the previous SnapZones layout"
                     onPressed: root.cycleLayout(-1)
                 }
                 GlobalShortcut {
-                    name: "vynxZonesRestore"
+                    name: "snapZonesRestore"
                     description: "Restore the focused window's previous geometry"
                     onPressed: root.restoreWindow()
                 }
                 GlobalShortcut {
-                    name: "vynxZonesNextZone"
-                    description: "Preview the next Vynx Zones zone"
+                    name: "snapZonesNextZone"
+                    description: "Preview the next SnapZones zone"
                     onPressed: root.cycleZone(1)
                 }
                 GlobalShortcut {
-                    name: "vynxZonesPreviousZone"
-                    description: "Preview the previous Vynx Zones zone"
+                    name: "snapZonesPreviousZone"
+                    description: "Preview the previous SnapZones zone"
                     onPressed: root.cycleZone(-1)
                 }
                 GlobalShortcut {
-                    name: "vynxZonesDragStart"
+                    name: "snapZonesDragStart"
                     description: "Start native Super-drag zone preview"
                     onPressed: dragController.start()
                 }
                 GlobalShortcut {
-                    name: "vynxZonesShiftCommit"
-                    description: "Commit Vynx Zones when Shift is released"
+                    name: "snapZonesShiftCommit"
+                    description: "Commit SnapZones when Shift is released"
                     onReleased: dragController.end()
                 }
                 GlobalShortcut {
-                    name: "vynxZonesDragCancel"
+                    name: "snapZonesDragCancel"
                     description: "Cancel native Super-drag zone preview with Escape"
                     onPressed: root.cancelDrag("escape")
                 }

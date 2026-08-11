@@ -7,7 +7,7 @@ import qs.modules.common.widgets
 Item {
     id: root
 
-    property string extensionId: "vynx-zones"
+    property string extensionId: "snapzones"
     implicitWidth: 620
     implicitHeight: 470
     property var service: ExtensionServices.get(root.extensionId, "zoneManager")
@@ -36,7 +36,7 @@ Item {
                 Layout.fillWidth: true
                 spacing: 1
                 StyledText {
-                    text: qsTr("Vynx Zones")
+                    text: qsTr("SnapZones")
                     color: Appearance.colors.colOnSurface
                     font.pixelSize: Appearance.font.pixelSize.large
                     font.bold: true
@@ -65,7 +65,7 @@ Item {
                 model: [
                     {
                         key: "Global shortcut",
-                        value: "vynxZonesToggle",
+                        value: "snapZonesToggle",
                         detail: "Open or close the zone picker"
                     },
                     {
@@ -95,7 +95,7 @@ Item {
                     },
                     {
                         key: "IPC",
-                        value: "vynxZones",
+                        value: "snapZones",
                         detail: "toggle, open, place 1–9, nextZone, previousZone, restore, dragStart, dragEnd, dragCancel"
                     }
                 ]

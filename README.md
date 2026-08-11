@@ -1,6 +1,6 @@
-# Vynx Zones
+# SnapZones
 
-FancyZones-style window placement for [ii-vynx](https://github.com/lll2yu/illogical-impulse) and Hyprland. Vynx Zones provides a keyboard/pointer picker, six reusable layouts, normalized multi-monitor geometry, safe `hyprctl` placement, and native `Super + left-drag` snapping.
+FancyZones-style window placement for [ii-vynx](https://github.com/lll2yu/illogical-impulse) and Hyprland. SnapZones provides a keyboard/pointer picker, six reusable layouts, normalized multi-monitor geometry, safe `hyprctl` placement, and native `Super + left-drag` snapping.
 
 ## What is included
 
@@ -28,11 +28,11 @@ The extension intentionally does not edit Hyprland or ii-vynx configuration file
 
 ```lua
 -- Example; choose keys that do not conflict with your setup.
-hl.bind("SUPER + Z", hl.dsp.global("quickshell:vynxZonesToggle"), { description = "Shell: Toggle Vynx Zones" })
-hl.bind("SUPER + SHIFT + Z", hl.dsp.global("quickshell:vynxZonesNextLayout"), { description = "Shell: Next Vynx Zones layout" })
+hl.bind("SUPER + Z", hl.dsp.global("quickshell:snapZonesToggle"), { description = "Shell: Toggle SnapZones" })
+hl.bind("SUPER + SHIFT + Z", hl.dsp.global("quickshell:snapZonesNextLayout"), { description = "Shell: Next SnapZones layout" })
 ```
 
-The exact global syntax may differ between Hyprland versions. The names exposed by Quickshell are `vynxZonesToggle`, `vynxZonesOpen`, `vynxZonesNextLayout`, `vynxZonesPreviousLayout`, `vynxZonesNextZone`, `vynxZonesPreviousZone`, `vynxZonesRestore`, `vynxZonesDragStart`, `vynxZonesDragEnd`, and `vynxZonesDragCancel`.
+The exact global syntax may differ between Hyprland versions. The names exposed by Quickshell are `snapZonesToggle`, `snapZonesOpen`, `snapZonesNextLayout`, `snapZonesPreviousLayout`, `snapZonesNextZone`, `snapZonesPreviousZone`, `snapZonesRestore`, `snapZonesDragStart`, `snapZonesShiftCommit`, and `snapZonesDragCancel`.
 
 ### Enable native Super-drag
 
@@ -45,8 +45,8 @@ The extension deliberately does not install these binds or edit your live config
 1. Open ii-vynx Settings → Extensions.
 2. Choose **Install local extension**.
 3. Select this repository directory.
-4. Enable **Vynx Zones**.
-5. Add a keybind for `vynxZonesToggle`.
+4. Enable **SnapZones**.
+5. Add a keybind for `snapZonesToggle`.
 
 For a manual test install, copy or symlink this directory to ii-vynx's installed extension directory. Do not copy it into the running shell while the extension is active; use ii-vynx's local extension reload flow so its metadata stays in sync.
 
@@ -55,7 +55,7 @@ For a manual test install, copy or symlink this directory to ii-vynx's installed
 Open the picker with the configured shortcut or the ii-vynx IPC command:
 
 ```sh
-qs -c ii ipc call vynxZones toggle
+qs -c ii ipc call snapZones toggle
 ```
 
 With the picker open:
@@ -77,7 +77,7 @@ The active layout and geometry settings are available through ii-vynx's extensio
 
 ## IPC surface
 
-The service target is `vynxZones`:
+The service target is `snapZones`:
 
 | Method | Description |
 | --- | --- |
@@ -128,4 +128,4 @@ npm run validate
 
 ## License
 
-Vynx Zones is licensed under the GNU General Public License, version 3 or later. See [`LICENSE`](LICENSE).
+SnapZones is licensed under the GNU General Public License, version 3 or later. See [`LICENSE`](LICENSE).
