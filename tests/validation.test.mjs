@@ -19,12 +19,12 @@ test("validates command and persistence identifiers", () => {
 
 test("sanitizes config values and rejects malformed layouts", () => {
     const config = validation.sanitizeConfig({
-        enabled: false, layout: "quadrants", gap: 999, padding: -4,
+        layout: "quadrants", gap: 999, padding: -4,
         overlayOpacity: 0.1, zoneColor: "red", showLabels: false,
         monitorLayouts: { "DP-1": "thirds", "bad\nname": "halves", "HDMI-1": "../../x" },
     });
     assert.deepEqual(config, {
-        enabled: false, layout: "quadrants", gap: 80, padding: 0,
+        layout: "quadrants", gap: 80, padding: 0,
         overlayOpacity: 0.2, zoneColor: "#8ab4f8", showLabels: false,
         floatOnPlacement: true,
         dragToZone: true, cursorSampleIntervalMs: 16,

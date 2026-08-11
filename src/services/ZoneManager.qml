@@ -48,7 +48,7 @@ Scope {
 
     readonly property var currentLayout: Layouts.getLayout(root.layoutForMonitor(root.targetMonitorName))
     readonly property string currentLayoutName: root.currentLayout?.name || "Halves"
-    readonly property bool ready: root.isMainShell && root.config.enabled
+    readonly property bool ready: root.isMainShell
 
     HyprlandBridge {
         id: bridge

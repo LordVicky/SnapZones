@@ -82,7 +82,6 @@ function sanitizeConfig(config = {}) {
         }, {})
         : {};
     return {
-        enabled: config.enabled !== false,
         layout: isSafeLayoutId(config.layout) ? config.layout : "halves",
         gap: Number.isFinite(rawGap) ? clamp(Math.round(rawGap), 0, 80) : 12,
         padding: Number.isFinite(rawPadding) ? clamp(Math.round(rawPadding), 0, 80) : 12,
