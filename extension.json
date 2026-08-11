@@ -3,7 +3,7 @@
   "name": "SnapZones",
   "description": "FancyZones-style window placement and native Super-drag snapping for ii-vynx and Hyprland.",
   "version": "0.2.0",
-  "author": "ii-vynx community",
+  "author": "LordVicky",
   "icon": "dashboard",
   "shapeString": "Cookie9Sided",
   "configDefaults": {
