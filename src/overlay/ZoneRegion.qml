@@ -64,6 +64,7 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
+        enabled: !root.manager?.dragActive
         cursorShape: Qt.PointingHandCursor
         onEntered: root.manager.setHoveredZone(root.zone.index)
         onExited: {

@@ -12,11 +12,14 @@ PanelWindow {
     id: root
 
     property var manager
+    // Keep the native compositor drag underneath the visual surface. An empty
+    // layer-shell input region makes this mode fully click-through.
+    property bool inputTransparent: false
     color: "transparent"
     exclusiveZone: 0
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell:vynx-zones"
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    WlrLayershell.keyboardFocus: root.inputTransparent ? WlrKeyboardFocus.None : WlrKeyboardFocus.Exclusive
 
     anchors {
         top: true
@@ -25,6 +28,11 @@ PanelWindow {
         right: true
     }
 
+    Region {
+        id: emptyInputRegion
+    }
+    mask: root.inputTransparent ? emptyInputRegion : null
+
     property var zoneRects: root.manager && root.manager.geometryRevision >= 0 && root.width >= 0 && root.height >= 0 ? root.manager.zoneRectsForScreen(root.screen) : []
     onZoneRectsChanged: {
         if (root.manager && root.manager.hoveredZone >= root.zoneRects.length)
@@ -32,14 +40,25 @@ PanelWindow {
     }
 
     Component.onCompleted: {
-        GlobalFocusGrab.addDismissable(root);
+        if (!root.inputTransparent)
+            GlobalFocusGrab.addDismissable(root);
     }
-    Component.onDestruction: GlobalFocusGrab.removeDismissable(root)
+    Component.onDestruction: {
+        if (!root.inputTransparent)
+            GlobalFocusGrab.removeDismissable(root);
+    }
+    onInputTransparentChanged: {
+        if (root.inputTransparent)
+            GlobalFocusGrab.removeDismissable(root);
+        else
+            GlobalFocusGrab.addDismissable(root);
+    }
 
     Connections {
         target: GlobalFocusGrab
         function onDismissed() {
-            root.manager.hidePicker();
+            if (!root.inputTransparent)
+                root.manager.hidePicker();
         }
     }
 
@@ -47,18 +66,21 @@ PanelWindow {
         id: shade
         anchors.fill: parent
         color: "#10131a"
-        opacity: 0.72
+        opacity: root.inputTransparent ? 0.34 : 0.72
     }
 
     Item {
         id: zoneLayer
         anchors.fill: parent
-        focus: true
-        activeFocusOnTab: true
+        focus: !root.inputTransparent
+        activeFocusOnTab: !root.inputTransparent
 
         Keys.onPressed: event => {
             if (event.key === Qt.Key_Escape) {
-                root.manager.hidePicker();
+                if (root.inputTransparent)
+                    root.manager.cancelDrag("escape");
+                else
+                    root.manager.hidePicker();
                 event.accepted = true;
                 return;
             }
@@ -130,7 +152,7 @@ PanelWindow {
                     font.pixelSize: Appearance.font.pixelSize.large
                 }
                 StyledText {
-                    text: qsTr("%1 · click a zone or press 1–9").arg(root.manager?.currentLayoutName || "Halves")
+                    text: root.inputTransparent ? qsTr("%1 · release the mouse to place · release Super to cancel").arg(root.manager?.currentLayoutName || "Halves") : qsTr("%1 · click a zone or press 1–9").arg(root.manager?.currentLayoutName || "Halves")
                     color: Appearance.colors.colSubtext
                     font.pixelSize: Appearance.font.pixelSize.small
                 }

@@ -27,11 +27,23 @@ test("sanitizes config values and rejects malformed layouts", () => {
         enabled: false, layout: "quadrants", gap: 80, padding: 0,
         overlayOpacity: 0.2, zoneColor: "#8ab4f8", showLabels: false,
         floatOnPlacement: true,
+        dragToZone: true, dragDropDelayMs: 70, cursorSampleIntervalMs: 16,
         monitorLayouts: { "DP-1": "thirds" },
     });
     assert.equal(validation.validateLayout({ id: "safe", name: "Safe", zones: [{ x: 0, y: 0, width: 0.5, height: 1 }] }), true);
     assert.equal(validation.validateLayout({ id: "unsafe id", name: "No", zones: [] }), false);
     assert.equal(validation.sanitizeLayout({ id: "safe", name: "Safe", zones: [{ x: 0, y: 0, width: 0.5, height: 1 }] }).zones[0].width, 0.5);
+});
+
+test("bounds native drag timing and keeps drag snapping opt-out safe", () => {
+    const config = validation.sanitizeConfig({
+        dragToZone: false,
+        dragDropDelayMs: 9999,
+        cursorSampleIntervalMs: 1,
+    });
+    assert.equal(config.dragToZone, false);
+    assert.equal(config.dragDropDelayMs, 250);
+    assert.equal(config.cursorSampleIntervalMs, 8);
 });
 
 test("handles malformed JSON and unsupported windows safely", () => {

@@ -74,6 +74,8 @@ function sanitizeConfig(config = {}) {
     const rawGap = Number(config.gap);
     const rawPadding = Number(config.padding);
     const rawOpacity = Number(config.overlayOpacity);
+    const rawDragDropDelay = Number(config.dragDropDelayMs);
+    const rawCursorSampleInterval = Number(config.cursorSampleIntervalMs);
     const monitorLayouts = config.monitorLayouts && typeof config.monitorLayouts === "object" && !Array.isArray(config.monitorLayouts)
         ? Object.keys(config.monitorLayouts).reduce((result, name) => {
             if (isSafeMonitorName(name) && isSafeLayoutId(config.monitorLayouts[name])) result[name] = config.monitorLayouts[name];
@@ -89,6 +91,9 @@ function sanitizeConfig(config = {}) {
         zoneColor: normalizeColor(config.zoneColor),
         showLabels: config.showLabels !== false,
         floatOnPlacement: config.floatOnPlacement !== false,
+        dragToZone: config.dragToZone !== false,
+        dragDropDelayMs: Number.isFinite(rawDragDropDelay) ? clamp(Math.round(rawDragDropDelay), 20, 250) : 70,
+        cursorSampleIntervalMs: Number.isFinite(rawCursorSampleInterval) ? clamp(Math.round(rawCursorSampleInterval), 8, 1000) : 16,
         monitorLayouts: monitorLayouts,
     };
 }

@@ -1,6 +1,6 @@
 # Vynx Zones
 
-FancyZones-style window placement for [ii-vynx](https://github.com/lll2yu/illogical-impulse) and Hyprland. Vynx Zones is a Phase 1 extension: it provides a keyboard/pointer picker, six reusable layouts, normalized multi-monitor geometry, and safe `hyprctl` placement for the focused window.
+FancyZones-style window placement for [ii-vynx](https://github.com/lll2yu/illogical-impulse) and Hyprland. Vynx Zones provides a keyboard/pointer picker, six reusable layouts, normalized multi-monitor geometry, safe `hyprctl` placement, and native `Super + left-drag` snapping.
 
 ## What is included
 
@@ -10,6 +10,9 @@ FancyZones-style window placement for [ii-vynx](https://github.com/lll2yu/illogi
 - Per-monitor layout assignments, gap and work-area padding controls.
 - Correct handling of monitor origins, scale-independent normalized layout data, reserved edges, and hot-plug fallback.
 - Optional float-on-placement for tiled windows.
+- Native `Super + left-drag` preview and release-to-snap, with monitor crossing support.
+- An input-transparent drag overlay so Hyprland keeps ownership of the real pointer gesture.
+- A bounded, unprivileged Python stdlib cursor sampler using Hyprland's user IPC socket (no raw input, elevated privileges, daemon, or plugin).
 - A cheatsheet page plus manifest-driven settings for the layout and placement options.
 - A main-shell process guard so settings/helper Quickshell processes do not register the overlay or global shortcuts.
 - Argument validation for all Hyprland commands. No shell command is assembled from a title, class, or other untrusted window string.
@@ -18,6 +21,7 @@ FancyZones-style window placement for [ii-vynx](https://github.com/lll2yu/illogi
 
 - ii-vynx with extension support enabled.
 - Hyprland and `hyprctl` on `PATH`.
+- Python 3 (standard library only) for native drag cursor sampling.
 - Quickshell 0.3 or a compatible ii-vynx build.
 
 The extension intentionally does not edit Hyprland or ii-vynx configuration files. It registers the following names; bind them in your own Hyprland configuration or use ii-vynx's keybind editor:
@@ -28,7 +32,13 @@ hl.bind("SUPER + Z", hl.dsp.global("quickshell:vynxZonesToggle"), { description 
 hl.bind("SUPER + SHIFT + Z", hl.dsp.global("quickshell:vynxZonesNextLayout"), { description = "Shell: Next Vynx Zones layout" })
 ```
 
-The exact global syntax may differ between Hyprland versions. The names exposed by Quickshell are `vynxZonesToggle`, `vynxZonesOpen`, `vynxZonesNextLayout`, `vynxZonesPreviousLayout`, `vynxZonesNextZone`, `vynxZonesPreviousZone`, and `vynxZonesRestore`.
+The exact global syntax may differ between Hyprland versions. The names exposed by Quickshell are `vynxZonesToggle`, `vynxZonesOpen`, `vynxZonesNextLayout`, `vynxZonesPreviousLayout`, `vynxZonesNextZone`, `vynxZonesPreviousZone`, `vynxZonesRestore`, `vynxZonesDragStart`, `vynxZonesDragEnd`, and `vynxZonesDragCancel`.
+
+### Enable native Super-drag
+
+Phase 2 keeps Hyprland's native move dispatcher in charge of the pointer. Add the bindings in [`docs/hyprland.lua`](docs/hyprland.lua) beside your existing Lua keybinds. If you already have a `SUPER + mouse:272` move bind, keep exactly one native `hl.dsp.window.drag()` bind and add the non-consuming Vynx Zones press/release binds plus the `SUPER_L`/`SUPER_R` release-cancel binds. Reload Hyprland after saving the file.
+
+The extension deliberately does not install these binds or edit your live configuration. Without the press/release integration, the Phase 1 picker and IPC commands still work, but holding Super while dragging will not open the preview.
 
 ## Install locally
 
@@ -54,6 +64,15 @@ With the picker open:
 - Use arrow keys to preview a zone and Enter/Space to place it.
 - Press Escape to cancel.
 
+With the Lua integration enabled:
+
+- Hold `Super` and left-drag a window using the normal Hyprland move gesture.
+- Move over a highlighted zone; the overlay follows the monitor under the cursor.
+- Release the left mouse button to place the window.
+- Release `Super` before the mouse button to cancel without placing; `Esc` also cancels.
+
+The drag surface is intentionally click-through and does not take keyboard focus. The `Esc` and Super-release paths therefore come from the Hyprland bindings, while the local overlay Escape handler remains a safe fallback if a key event is delivered to it.
+
 The active layout and geometry settings are available through ii-vynx's extension configuration. Per-monitor assignments are stored by the service for the focused monitor; layouts are stored as normalized rectangles and therefore survive resolution changes.
 
 ## IPC surface
@@ -71,10 +90,15 @@ The service target is `vynxZones`:
 | `nextZone` | Preview the next zone in the open picker |
 | `previousZone` | Preview the previous zone in the open picker |
 | `restore` | Restore the focused window's last saved geometry |
+| `dragStart` | Start a native drag preview (normally called by the Lua press bind) |
+| `dragEnd` | Drop into the current hovered zone (normally called by the Lua release bind) |
+| `dragCancel` | Cancel a native drag preview |
 
 ## Scope and limitations
 
-Phase 1 intentionally uses a picker activation flow rather than intercepting every native drag. It acts on the focused Hyprland window and sends pixel move/resize dispatches. Fullscreen, pinned, hidden, unmapped, and special-workspace windows are ignored. Tiled windows are floated before placement when **Float tiled windows** is enabled.
+Native drag preview is opt-in through the Hyprland Lua snippet because an ii-vynx extension cannot intercept compositor pointer bindings by itself. It acts on the focused Hyprland window captured at press time and sends pixel move/resize dispatches after mouse release. Releasing Super cancels the preview and never issues a placement. Fullscreen, pinned, hidden, unmapped, and special-workspace windows are ignored. Tiled windows are floated before placement when **Float tiled windows** is enabled.
+
+The cursor helper polls `j/cursorpos` on Hyprland's per-user command socket only while a drag is active. It validates the socket environment, command, response size, coordinate range, and sampling interval. It never reads raw input devices and never invokes a shell. If the socket is unavailable, the overlay remains harmless and release cancels without issuing a placement.
 
 Hyprland's own tiling layout remains authoritative for tiled windows. If you need a window to remain tiled, disable float-on-placement and use native Hyprland directional/container operations instead; exact arbitrary rectangles require floating clients. Phase 1 restore always restores exact geometry as a floating window because the ii-vynx extension API does not reliably expose the prior tiled/floating state on every Quickshell build.
 
@@ -82,10 +106,16 @@ The current monitor's reserved edges are read from `hyprctl monitors -j` when av
 
 ## Development
 
-This repository has no runtime dependency install step. Run the pure geometry/layout tests with:
+This repository has no runtime dependency install step. Run the JavaScript state/geometry/layout tests with:
 
 ```sh
 npm test
+```
+
+Run the Python fake-socket protocol tests with:
+
+```sh
+python3 tests/cursor_sampler.test.py
 ```
 
 Run the metadata, JavaScript, QML formatting, and QML lint checks with:

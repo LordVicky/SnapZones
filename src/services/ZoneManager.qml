@@ -12,8 +12,9 @@ import "../js/validation.js" as Validation
 import "../overlay"
 import "."
 
-// Main state machine for Phase 1. It is deliberately a service so the
-// cheatsheet and overlay share one layout selection and one placement queue.
+// Main state machine for Phase 2. It is deliberately a service so the
+// cheatsheet, picker, and native drag controller share one layout selection
+// and one placement queue.
 // A process guard keeps IPC/global shortcuts/window overlays out of ii-vynx's
 // auxiliary settings process (the same issue handled by ii-eve's app launcher).
 Scope {
@@ -39,6 +40,10 @@ Scope {
     property var pendingPlacement: null
     property var pendingRestore: null
     property int geometryRevision: 0
+    // Set by DragController while the native Super+mouse move is active.
+    // Unlike pickerOpen this state must not request keyboard focus.
+    property bool dragActive: false
+    property point dragCursor: Qt.point(0, 0)
 
     readonly property var currentLayout: Layouts.getLayout(root.layoutForMonitor(root.targetMonitorName))
     readonly property string currentLayoutName: root.currentLayout?.name || "Halves"
@@ -46,6 +51,16 @@ Scope {
 
     HyprlandBridge {
         id: bridge
+    }
+
+    DragController {
+        id: dragController
+        manager: root
+        enabled: root.ready && root.config.dragToZone
+        onCancelled: reason => {
+            if (reason !== "no-zone")
+                root.errorMessage = "Drag cancelled: " + reason;
+        }
     }
 
     Process {
@@ -213,10 +228,13 @@ Scope {
     }
 
     function closePickerIfTargetGone() {
-        if (!root.pickerOpen || !root.targetMonitorName || root.monitorStillExists(root.targetMonitorName))
+        if ((!root.pickerOpen && !root.dragActive) || !root.targetMonitorName || root.monitorStillExists(root.targetMonitorName))
             return;
         const focused = root.focusedMonitorName();
-        root.hidePicker();
+        if (root.dragActive)
+            dragController.cancel("monitor-disconnected");
+        else
+            root.hidePicker();
         root.targetMonitorName = focused === root.targetMonitorName ? "" : focused;
         root.activeLayoutId = root.layoutForMonitor(root.targetMonitorName);
         root.errorMessage = "Target monitor disconnected.";
@@ -321,6 +339,88 @@ Scope {
         });
     }
 
+    // Capture the focused client for a compositor-owned native drag without
+    // opening the keyboard-focused picker. The drag overlay is deliberately
+    // click-through, so the window keeps receiving Hyprland's pointer move.
+    function beginDragCapture() {
+        if (!root.ready || bridge.busy || root.pickerOpen)
+            return false;
+        const window = root.activeWindowSnapshot();
+        if (!window || Validation.isUnsupportedWindow(window)) {
+            root.errorMessage = "The focused window cannot be dragged into a zone.";
+            return false;
+        }
+        if (window.floating !== true && !root.config.floatOnPlacement) {
+            root.errorMessage = "The focused window is tiled; enable Float tiled windows to place it.";
+            return false;
+        }
+        const monitor = root.monitorForWindow(window) || root.focusedMonitorName();
+        if (!monitor || !root.monitorStillExists(monitor)) {
+            root.errorMessage = "No active monitor is available for zone placement.";
+            return false;
+        }
+        root.pendingWindow = window;
+        root.pendingAddress = window.address;
+        root.targetMonitorName = monitor;
+        root.hoveredZone = -1;
+        root.dragCursor = Qt.point(0, 0);
+        root.errorMessage = "";
+        return true;
+    }
+
+    function cancelDragCapture() {
+        root.pendingAddress = "";
+        root.pendingWindow = null;
+        root.hoveredZone = -1;
+        root.dragCursor = Qt.point(0, 0);
+    }
+
+    function cancelDrag(reason = "cancelled") {
+        return dragController.cancel(String(reason));
+    }
+
+    function setDragTargetMonitor(name) {
+        const wanted = String(name || "");
+        if (!Validation.isSafeMonitorName(wanted) || !root.monitorStillExists(wanted))
+            return false;
+        if (root.targetMonitorName !== wanted)
+            root.targetMonitorName = wanted;
+        root.activeLayoutId = root.layoutForMonitor(wanted);
+        return true;
+    }
+
+    function globalZoneRectsForScreen(screen) {
+        const monitor = root.monitorForScreen(screen);
+        const layout = Layouts.getLayout(root.layoutForMonitor(monitor.name));
+        const workArea = Geometry.globalWorkAreaForScreen(monitor, screen, root.config.padding);
+        const pixels = Geometry.zonesToPixels(layout.zones, workArea, root.config.gap);
+        return pixels.map((rect, index) => ({
+                    x: rect.x,
+                    y: rect.y,
+                    width: rect.width,
+                    height: rect.height,
+                    index: index,
+                    label: String(index + 1),
+                    name: layout.name
+                }));
+    }
+
+    function monitorForGlobalPoint(point) {
+        const x = Number(point?.x);
+        const y = Number(point?.y);
+        if (!Number.isFinite(x) || !Number.isFinite(y))
+            return "";
+        const screens = Quickshell.screens || [];
+        for (const screen of screens) {
+            const monitor = Geometry.normalizeMonitor(root.monitorForScreen(screen));
+            const width = monitor.width / Math.max(0.1, monitor.scale);
+            const height = monitor.height / Math.max(0.1, monitor.scale);
+            if (x >= monitor.x && x < monitor.x + width && y >= monitor.y && y < monitor.y + height)
+                return monitor.name;
+        }
+        return "";
+    }
+
     function nativeToplevels() {
         const values = ToplevelManager.toplevels?.values;
         if (values === undefined || values === null)
@@ -362,7 +462,7 @@ Scope {
     }
 
     function beginPicker() {
-        if (!root.ready)
+        if (!root.ready || root.dragActive)
             return false;
         if (bridge.busy) {
             root.errorMessage = "Another placement is still in progress.";
@@ -395,7 +495,7 @@ Scope {
         return (Quickshell.screens || []).find(candidate => String(candidate?.name || "") === root.targetMonitorName) || null;
     }
 
-    function revalidatePlacement(zoneIndex) {
+    function revalidatePlacement(zoneIndex, fromDrag = false) {
         const index = Number(zoneIndex);
         if (!Number.isInteger(index) || index < 0)
             return {
@@ -425,7 +525,10 @@ Scope {
                 reason: "The target is tiled; enable Float tiled windows to place it."
             };
         const currentMonitor = root.monitorForWindow(window);
-        if (currentMonitor && currentMonitor !== root.targetMonitorName)
+        // A native drag is allowed to cross monitors. The drag controller has
+        // already selected and validated targetMonitorName from the latest
+        // cursor sample; keep the equality guard for picker placements.
+        if (!fromDrag && currentMonitor && currentMonitor !== root.targetMonitorName)
             return {
                 ok: false,
                 reason: "The target window moved to another monitor."
@@ -470,23 +573,28 @@ Scope {
             root.beginPicker();
     }
 
-    function placeZone(index) {
+    function placeZone(index, fromDrag = false) {
         let zoneIndex = Number(index);
         if (!Number.isInteger(zoneIndex) || zoneIndex < 0)
+            return false;
+        if (fromDrag === true && !root.dragActive)
             return false;
         if (bridge.busy) {
             root.errorMessage = "Another placement is still in progress.";
             return false;
         }
-        if (!root.pickerOpen && !root.beginPicker())
+        if (!root.pickerOpen && !fromDrag && !root.beginPicker())
             return false;
-        const placement = root.revalidatePlacement(zoneIndex);
+        const placement = root.revalidatePlacement(zoneIndex, fromDrag === true);
         if (!placement.ok) {
             root.errorMessage = placement.reason;
             root.hidePicker();
             return false;
         }
-        const old = placement.window;
+        // Native Hyprland dragging has already changed the live rectangle by
+        // release time. Keep the press-time snapshot for Restore so a failed
+        // or subsequently reversed snap returns to the pre-drag geometry.
+        const old = fromDrag && root.pendingWindow ? root.pendingWindow : placement.window;
         const clientState = HyprlandData.windowByAddress?.[placement.address];
         const floatingWasReported = clientState && typeof clientState.floating === "boolean";
         // Foreign-toplevel objects may expose a default `false` even though
@@ -509,7 +617,7 @@ Scope {
             width: old.size?.[0] ?? old.width ?? 1,
             height: old.size?.[1] ?? old.height ?? 1,
             floating: wasFloating,
-            monitor: root.targetMonitorName
+            monitor: fromDrag ? (root.monitorForWindow(old) || root.targetMonitorName) : root.targetMonitorName
         };
         root.savedGeometry = Object.assign({}, root.savedGeometry, {
             [placement.address]: saved
@@ -602,6 +710,15 @@ Scope {
                     function close() {
                         root.hidePicker();
                     }
+                    function dragStart() {
+                        dragController.start();
+                    }
+                    function dragEnd() {
+                        dragController.end();
+                    }
+                    function dragCancel() {
+                        root.cancelDrag("ipc-cancelled");
+                    }
                     function place(index: int) {
                         if (index > 0 && !root.placeZone(index - 1))
                             console.warn("Vynx Zones: placement rejected:", root.errorMessage);
@@ -658,6 +775,22 @@ Scope {
                     description: "Preview the previous Vynx Zones zone"
                     onPressed: root.cycleZone(-1)
                 }
+                GlobalShortcut {
+                    name: "vynxZonesDragStart"
+                    description: "Start native Super-drag zone preview"
+                    onPressed: dragController.start()
+                }
+                GlobalShortcut {
+                    name: "vynxZonesDragEnd"
+                    description: "Drop native Super-drag into the hovered zone"
+                    onReleased: dragController.end()
+                }
+                GlobalShortcut {
+                    name: "vynxZonesDragCancel"
+                    description: "Cancel native Super-drag zone preview (Escape or Super release)"
+                    onPressed: root.cancelDrag("escape")
+                    onReleased: root.cancelDrag("modifier-released")
+                }
             }
         }
     }
@@ -675,10 +808,11 @@ Scope {
                         id: overlayLoader
                         required property var modelData
                         property var zoneManager: overlayHost.manager
-                        active: zoneManager.ready && zoneManager.pickerOpen && String(modelData?.name || "") === zoneManager.targetMonitorName
+                        active: zoneManager.ready && (zoneManager.pickerOpen || zoneManager.dragActive) && String(modelData?.name || "") === zoneManager.targetMonitorName
                         sourceComponent: ZoneOverlay {
                             screen: overlayLoader.modelData
                             manager: overlayLoader.zoneManager
+                            inputTransparent: overlayLoader.zoneManager.dragActive
                         }
                     }
                 }

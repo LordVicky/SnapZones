@@ -1,8 +1,8 @@
 {
   "extensionId": "vynx-zones",
   "name": "Vynx Zones",
-  "description": "FancyZones-style window placement for ii-vynx and Hyprland.",
-  "version": "0.1.2",
+  "description": "FancyZones-style window placement and native Super-drag snapping for ii-vynx and Hyprland.",
+  "version": "0.2.0",
   "author": "ii-vynx community",
   "icon": "dashboard",
   "shapeString": "Cookie9Sided",
@@ -14,7 +14,10 @@
     "overlayOpacity": 0.86,
     "zoneColor": "#8ab4f8",
     "showLabels": true,
-    "floatOnPlacement": true
+    "floatOnPlacement": true,
+    "dragToZone": true,
+    "dragDropDelayMs": 70,
+    "cursorSampleIntervalMs": 16
   },
   "configSchema": {
     "enabled": {
@@ -78,6 +81,28 @@
       "label": "Float Tiled Windows",
       "icon": "open_in_full",
       "default": true
+    },
+    "dragToZone": {
+      "type": "bool",
+      "label": "Enable Super-drag snapping",
+      "icon": "pan_tool_alt",
+      "default": true
+    },
+    "dragDropDelayMs": {
+      "type": "int",
+      "label": "Drag drop settling delay",
+      "icon": "timer",
+      "default": 70,
+      "min": 20,
+      "max": 250
+    },
+    "cursorSampleIntervalMs": {
+      "type": "int",
+      "label": "Cursor sampling interval",
+      "icon": "speed",
+      "default": 16,
+      "min": 8,
+      "max": 1000
     }
   },
   "contributes": {

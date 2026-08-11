@@ -89,9 +89,14 @@ Item {
                         detail: "Close the picker"
                     },
                     {
+                        key: "Super + left drag",
+                        value: "Native snap",
+                        detail: "Release the mouse to place; release Super or press Esc to cancel (Lua integration required)"
+                    },
+                    {
                         key: "IPC",
                         value: "vynxZones",
-                        detail: "toggle, open, place 1–9, nextZone, previousZone, restore"
+                        detail: "toggle, open, place 1–9, nextZone, previousZone, restore, dragStart, dragEnd, dragCancel"
                     }
                 ]
                 delegate: Rectangle {

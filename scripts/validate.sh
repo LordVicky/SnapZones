@@ -9,6 +9,10 @@ if ! command -v node >/dev/null 2>&1; then
     echo "validate: node is required" >&2
     exit 1
 fi
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "validate: python3 is required for native drag cursor sampling" >&2
+    exit 1
+fi
 
 node --input-type=module -e 'import fs from "node:fs"; JSON.parse(fs.readFileSync(process.argv[1] + "/extension.json", "utf8"));' \
     -- "${repo_dir}" >/dev/null
